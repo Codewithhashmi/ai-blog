@@ -1,70 +1,75 @@
 'use client';
-
 import { useState } from 'react';
 
-export default function CreateBlogPage() {
-  const [topic, setTopic] = useState('');
-  const [blog, setBlog] = useState('');
+export default function CreatePostPage() {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const generateBlog = async () => {
+  const generateAIContent = async () => {
+    if (!title) return alert('Please enter a topic/title first.');
+
     setLoading(true);
-    setError('');
-    setBlog('');
-
     try {
-      const res = await fetch('/api/generate-ai-content', {
+      const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ topic: title }),
       });
 
       const data = await res.json();
-      console.log('🧪 API Response:', data);
-
-      if (!res.ok || !data.blog) {
-        throw new Error(data.error || 'No blog returned');
+      if (data.content) {
+        setContent(data.content);
+      } else {
+        alert('Failed to generate content.');
       }
-
-      setBlog(data.blog);
-    } catch (err: any) {
-      console.error('❌ Fetch error:', err.message);
-      setError(err.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      alert('Error generating content.');
+      console.error(err);
     }
+    setLoading(false);
   };
 
   return (
-    <main className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">📝 Create an AI Blog</h1>
+    <div className="max-w-2xl mx-auto mt-10 px-4">
+      <h1 className="text-3xl font-bold mb-6">📝 Create Blog Post</h1>
 
       <input
-        value={topic}
-        onChange={(e) => setTopic(e.target.value)}
-        placeholder="Enter a blog topic..."
-        className="w-full border p-3 rounded mb-4"
+        type="text"
+        placeholder="Enter blog title"
+        className="w-full p-2 mb-4 border rounded"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Blog Content</h2>
+        <button
+          onClick={generateAIContent}
+          disabled={loading}
+          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
+        >
+          {loading ? 'Generating...' : '✨ Generate with AI'}
+        </button>
+      </div>
+
+      <textarea
+        rows={12}
+        className="w-full p-2 border rounded mb-4"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Generated blog content will appear here..."
       />
 
       <button
-        onClick={generateBlog}
-        disabled={!topic || loading}
-        className="w-full bg-blue-600 text-white py-2 rounded disabled:bg-gray-400"
+        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+        onClick={() => alert('💾 Save functionality coming soon')}
       >
-        {loading ? 'Generating...' : 'Generate Blog'}
+        Save Post
       </button>
-
-      {error && <p className="text-red-600 mt-4">❌ {error}</p>}
-
-      {blog && (
-        <div className="mt-6 bg-gray-100 p-4 rounded">
-          <h2 className="text-xl font-semibold mb-2">Generated Blog:</h2>
-          <p className="whitespace-pre-line">{blog}</p>
-        </div>
-      )}
-    </main>
+    </div>
   );
 }
+
 
 
